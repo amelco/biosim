@@ -1,0 +1,6 @@
+! Leaf area index parameters (rho, Am, tau)
+0.8  0.05 10.0
+! Numbber of shoots  parameters (Nm)
+10000.0  
+! Initial values (A0, N0, Bt0)
+0.01  0.6  100.0
