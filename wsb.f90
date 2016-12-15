@@ -18,17 +18,22 @@ Real :: ETa                  !Acutal evapotranspiration_ET (mm)
 Real :: BL                          !Balanço hídrico (mm)
 Integer :: i,eof,Year,SQD    !
 
+real :: ETsum, ETasum, Dsum, water_insum, BLsum
+
 ! Global soil variables
-real Or1, Os1, a1, n1, Ks1    ! parameters from 1st soil layer
-real Or2, Os2, a2, n2, Ks2    ! parameters from 2nd soil layer
-real z1, z2                   ! depths of soil layer
+real :: Or1, Os1, a1, n1, Ks1    ! parameters from 1st soil layer
+real :: Or2, Os2, a2, n2, Ks2    ! parameters from 2nd soil layer
+real :: z1, z2                   ! depths of soil layer
+
 
 contains
 
 
-subroutine init()
+subroutine waterBalance()
   100 FORMAT (A5,10(A8,2x)) 
-  110 FORMAT (I5,10(F8.2,2x)) 
+  101 FORMAT (A5,2x,6(A8,2x)) 
+  110 FORMAT (I5,9(F8.2,2x),F8.4,2x) 
+  111 FORMAT (I5,2x,5(F8.2,2x),F8.4,2x) 
   ! read soil parameters data from input file
   !call readInputs()
   call readSoilData()
@@ -37,7 +42,7 @@ subroutine init()
   Read(21,*)
   Read(21,*)
   Open(1,file='swb.out', status='replace')
-  write(*,100) "SQD", "ET", "Eta", "Tr", "Wi(1)", "Wi(2)", "Wx(1)", "Wx(2)", "D", "Rain", "BL"
+  write(*,101) "Year", "ET", "Eta", "Tr", "D", "Rain", "BL"
   write(1,100) "SQD", "ET", "Eta", "Tr", "Wi(1)", "Wi(2)", "Wx(1)", "Wx(2)", "D", "Rain", "BL"
   
   
@@ -48,6 +53,11 @@ subroutine init()
   Eta = 0.0
   ET_ant = 5.65
   eof = 0
+  Etsum       = .0
+  Etasum      = .0
+  Dsum        = .0
+  water_insum = .0
+  BLsum       = .0
   
   do while (eof .ne. -1)
     read(21,*, iostat=eof) Year, SQD, water_in, Rad, ET
@@ -59,8 +69,22 @@ subroutine init()
         call tempSWB(2, excess)
         BL = D + dW(2) - excess
       endif
-      write(*,110) SQD, ET, Eta, ETa/ET_ant, Wi(1), Wi(2), Wx(1), Wx(2), D, water_in, BL
+      ! show output on screen only at the end of the year
+      if (SQD == 365) then
+        write(*,111) Year, ETsum, Etasum, ETasum/ETsum, Dsum, water_insum, BLsum
+        Etsum       = .0
+        Etasum      = .0
+        Dsum        = .0
+        water_insum = .0
+        BLsum       = .0
+      endif
       write(1,110) SQD, ET, Eta, ETa/ET_ant, Wi(1), Wi(2), Wx(1), Wx(2), D, water_in, BL
+
+      Etsum       = Etsum       + ET
+      Etasum      = Etasum      + ETa
+      Dsum        = Dsum        + D
+      water_insum = water_insum + water_in
+      BLsum       = BLsum       + BL
       Wi_ant(1) = Wi(1)
       Wi_ant(2) = Wi(2)
       ET_ant = ET

@@ -10,7 +10,7 @@ linux = .true.    ! set to .false. when compiling under Windows machine
 call iniScreen()
 call readInput()
 call printInitial()
-call init()
+call waterBalance()
 
 contains
 
