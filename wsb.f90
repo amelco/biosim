@@ -59,6 +59,8 @@ subroutine waterBalance()
   water_insum = .0
   BLsum       = .0
   
+  ! int his do loop, each line read from the file corresponds to one day
+  ! thus, dt = 1 day
   do while (eof .ne. -1)
     read(21,*, iostat=eof) Year, SQD, water_in, Rad, ET
     if (eof .ne. -1) then
