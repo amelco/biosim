@@ -11,7 +11,7 @@ subroutine iniScreen()
     call system("cls")
   endif
   print*, "-== BIOmass SIMulator (Caattinga forest scenario) ==-"
-  print*, "version 0.1"
+  print*, "version 0.2"
   print*, "by A.H.F. Bezerra and E.A.R. Pinheiro, (2016)"
   print*
 end subroutine

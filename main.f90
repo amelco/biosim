@@ -96,7 +96,6 @@ subroutine printInitial()
   write(*,100) "Saturated water content", Os1, "cm3/cm3"
   write(*,100) "alpha", a1, "1/cm"
   write(*,100) "n", n1, "-"
-  write(*,101) "Number of days to simulate", tnd, ""
   write(*,*) "---------------- soil layer 2-------------------------------"
   write(*,100) "Residual water content", Or2, "cm3/cm3"
   write(*,100) "Saturated water content", Os2, "cm3/cm3"
