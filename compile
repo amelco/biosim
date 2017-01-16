@@ -2,3 +2,5 @@
 ifort -c *.f90
 rm main.o
 ifort *.o main.f90 -o main
+rm *.o
+rm *.mod

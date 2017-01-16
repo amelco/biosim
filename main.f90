@@ -43,6 +43,9 @@ do while (day .lt. tnd)
   day = day + 1
 enddo
 close(21)
+
+! The loop througout the days is inside waterBalance. Need to put it outside
+!   in order to compute the others variables
 call waterBalance()
 
 contains

@@ -80,6 +80,7 @@ subroutine waterBalance()
         water_insum = .0
         BLsum       = .0
       endif
+      ! daily write in output file (swb.out)
       write(1,110) Year, SQD, ET, Eta, ETa/ET_ant, Wi(1), Wi(2), Wx(1), Wx(2), D, water_in, BL
 
       Etsum       = Etsum       + ET
