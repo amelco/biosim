@@ -1,21 +1,21 @@
 program biosim
 use variables
 use screen
-!use wsb
+use wsb
 implicit none
 
 integer :: tnd    ! total number of days (number of data lines of wheater input file)
 integer :: day    ! current day
-integer :: sqd    ! sequential day (1 to 365)
-integer :: year   ! current year
 integer :: io
+!integer :: sqd    ! sequential day (1 to 365)
+!integer :: year   ! current year
 ! Global soil variables
-real :: Or1, Os1, a1, n1, Ks1    ! parameters from 1st soil layer
-real :: Or2, Os2, a2, n2, Ks2    ! parameters from 2nd soil layer
-real :: z1, z2                   ! depths of soil layer
+!real :: Or1, Os1, a1, n1, Ks1    ! parameters from 1st soil layer
+!real :: Or2, Os2, a2, n2, Ks2    ! parameters from 2nd soil layer
+!real :: z1, z2                   ! depths of soil layer
 
 
-real :: water_in, Rad, ET
+!real :: water_in, Rad, ET
 
 ! initialization of variables
 linux = .true.    ! set to .false. when compiling under Windows machine
@@ -27,20 +27,23 @@ call iniScreen()
 call readInput()
 call printInitial()
 
-
+! opening wheater data for reading
 open(21,file='data.prn',status='old')       ! wheater input values
 read(21,*)
 read(21,*)
+
+! begin of loop (dt=1 day)
 do while (day .lt. tnd)
   
   read(21,*) year, SQD, water_in, Rad, ET
   if (sqd == 365) then
-    print*, year
+    !print*, year
     year = year + 1
   endif
+  day = day + 1
 enddo
 close(21)
-!call waterBalance()
+call waterBalance()
 
 contains
 

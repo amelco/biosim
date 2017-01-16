@@ -30,9 +30,9 @@ contains
 
 
 subroutine waterBalance()
-  100 FORMAT (A5,10(A8,2x)) 
+  100 FORMAT (2A5,10(A8,2x)) 
   101 FORMAT (A5,2x,6(A8,2x)) 
-  110 FORMAT (I5,9(F8.2,2x),F8.4,2x) 
+  110 FORMAT (2I5,9(F8.2,2x),F8.4,2x) 
   111 FORMAT (I5,2x,5(F8.2,2x),F8.4,2x) 
   ! read soil parameters data from input file
   !call readInputs()
@@ -43,7 +43,7 @@ subroutine waterBalance()
   Read(21,*)
   Open(1,file='swb.out', status='replace')
   write(*,101) "Year", "ET", "Eta", "Tr", "D", "Rain", "BL"
-  write(1,100) "SQD", "ET", "Eta", "Tr", "Wi(1)", "Wi(2)", "Wx(1)", "Wx(2)", "D", "Rain", "BL"
+  write(1,100) "Year", "SQD", "ET", "Eta", "Tr", "Wi(1)", "Wi(2)", "Wx(1)", "Wx(2)", "D", "Rain", "BL"
   
   
   ! inicializacao das variaveis
@@ -80,7 +80,7 @@ subroutine waterBalance()
         water_insum = .0
         BLsum       = .0
       endif
-      write(1,110) SQD, ET, Eta, ETa/ET_ant, Wi(1), Wi(2), Wx(1), Wx(2), D, water_in, BL
+      write(1,110) Year, SQD, ET, Eta, ETa/ET_ant, Wi(1), Wi(2), Wx(1), Wx(2), D, water_in, BL
 
       Etsum       = Etsum       + ET
       Etasum      = Etasum      + ETa
