@@ -28,6 +28,7 @@ real :: lost_water							! Adds water that was lost due to condition of Wx as fu
 Real :: Wii                  		! Initial soil-water storage (mm)
 Real :: Wt                   		! water stress reduction function
 Real :: BL                   		! Water balance (mm/day)
+real :: BLmax
 integer :: eof				! end of file
 integer :: Year				! 4 digits year
 integer :: SQD    			! sequential day (1 to 365)

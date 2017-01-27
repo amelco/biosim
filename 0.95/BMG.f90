@@ -5,6 +5,7 @@ implicit none
 !-- FORMATS
 100 FORMAT (2A7,11(A8,2x)) 
 101 FORMAT (A5,10(A8,2x)) 
+102 FORMAT (A7,2x,5(A8,2x)) 
 200 FORMAT (2A5,A8,  2x,A12,  2x,A6,  2x,2A12,  2x,A8)
 201 FORMAT (2I5,F8.5,2x,F12.1,2x,F6.1,2x,2F12.1,2x,F8.2)
 
@@ -19,8 +20,8 @@ print*, Os1
 ! opens the output file
 Open(1,file='swb.out', status='replace')
 !write(*,101) "Year", "ET", "Eta", "Tr", "D", "Rain", "BL"
-write(*,101) "Year", "SQD", "ET", "Eta", "Tr", "Wi", "Wx", "D", "Rain", "BL", "omega"
-write(1,101) "Year", "SQD", "ET", "Eta", "Tr", "Wi", "Wx", "D", "Rain", "BL", "omega"
+write(*,102) "Year", "ET", "ETa", "Drainage", "Rain", "WB"
+write(1,101) "Year", "SQD", "ET", "ETa", "Tr", "Wi", "Wx", "D", "Rain", "BL", "omega"
 Open(2,file='bio.out', status='replace')
 write(2,200) "Year", "SQD", "A", "B", "N", "Broot", "Bshoot", "rd"
 
@@ -94,7 +95,7 @@ do while (eof .ne. -1)
 Enddo
 
 print*
-print*, "Lost water: ", lost_water
+print*, "Maximum water balance error: ", BLmax
 print*
 
 contains
@@ -259,6 +260,7 @@ subroutine initializeVariables()
   Dsum      	= 0
   rainsum   	= 0
   BLsum     	= 0
+  BLmax				= 0.0
   ETavg     	= 0
   ETaavg    	= 0
   Am 					= 0.05
@@ -291,6 +293,7 @@ subroutine waterBalance()
 implicit none
 
 110 FORMAT (2I7,9(F8.2,2x)) 
+120 FORMAT (I7,2x,5(F8.2,2x)) 
 
   ! calculates soil water balance
   if (eof .ne. -1) then
@@ -300,21 +303,19 @@ implicit none
     ! show on screen at yearly timestep
     if (int(Year/4.0)*4 == Year) then
       if (SQD == 366) then
-        write(*,110) Year, SQD, ET, Eta, ETa/ET_ant, Wit, Wxt, D, water_in, BL, &
-				& reduction_fac(Wi_ant_t, Wx_ant_t, beta)
+        write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum
         Dsum      = 0
         rainsum   = 0
-        BLsum     = 0
+        !BLsum     = 0
         ETavg     = 0
         ETaavg    = 0
      endif
     else
       if (SQD == 365) then
-        write(*,110) Year, SQD, ET, Eta, ETa/ET_ant, Wit, Wxt, D, water_in, BL, &
-				& reduction_fac(Wi_ant_t, Wx_ant_t, beta)
+        write(*,120) Year,ETavg, ETaavg, Dsum, rainsum, BLsum
         Dsum      = 0
         rainsum   = 0
-        BLsum     = 0
+        !BLsum     = 0
         ETavg     = 0
         ETaavg    = 0
       endif
@@ -323,8 +324,9 @@ implicit none
     write(1,110) Year, SQD, ET, Eta, ETa/ET_ant, Wit, Wxt, D, water_in, BL, &
 		& reduction_fac(Wi_ant_t, Wx_ant_t, beta)
 
-    ! calculates reduction function value
-    !wt = ETa/ET_ant
+		if (BL > BLmax) then
+		  BLmax = BL
+		endif
 
     ! sum
     Dsum = Dsum + D
