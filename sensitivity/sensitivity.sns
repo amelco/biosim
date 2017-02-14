@@ -1,0 +1,15 @@
+scf
+* control data
+noverbose
+16	1
+1	1	single	point
+* sensan files
+respar.txt
+resabs.txt
+resrel.txt
+ressen.txt
+* model command line
+./bmg
+* model input/output
+params.tpl	params.in
+sensitivity.ins	bio.out

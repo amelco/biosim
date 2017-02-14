@@ -61,10 +61,11 @@ real :: root_depth		! root depth (mm)
 real :: root_max			! maximum root depth (mm)
 real :: inter					! interception factor of rain by the tree
 real :: kc						! crop coefficient
+real :: kc_min, kc_full  ! params for kc
 real ft_r 
-real :: av						! vegetation albedo
-real :: as						! soil albedo
 real :: LAI						! leaf area index
+real :: gama   				! bioloss parameter
+real :: alpha   				! bioloss parameter
 
 real :: N				! number of shoot (-)
 real :: Nant				! number of shoot from the previous day (-)
@@ -79,6 +80,7 @@ real :: dB				! Daily rate of total biomass (g/day)
 real :: dBs				! Daily rate of total biomass of shoots (g/day)
 real :: dBr				! Daily rate of total biomass of roots (g/day)
 real :: rdg    ! parameter to convert produced root biomass (g) into root growth (mm) [g/mm]
+real :: part_root, part_shoot    ! biomass partitioning: root and shoot
 
 real :: Lt    				! Leaf area index per tree (-)
 

@@ -9,13 +9,15 @@ implicit none
 200 FORMAT (2A5,A8,  2x,A12,  2x,A6,  2x,2A12,  2x,A8)
 201 FORMAT (2I5,F8.5,2x,F12.1,2x,F6.1,2x,2F12.1,2x,F8.2)
 
+real :: dbsum
+
+! read soil parameters data from input file
+call readInputs()
+call readSoilData()
 ! Variable initialization
 call initializeVariables()
 
-! read soil parameters data from input file
-!call readInputs()
-call readSoilData()
-print*, Os1
+dbsum = 0.0
 
 ! opens the output file
 Open(1,file='swb.out', status='replace')
@@ -29,11 +31,13 @@ write(2,200) "Year", "SQD", "A", "B", "N", "Broot", "Bshoot", "rd"
 ! Calculates maximum soil-water storage for each depth
 
 Open(21,file='data.prn',status='old')
+!Open(21,file='data2.prn',status='old')
 !Open(21,file='Peter2.prn',status='old')
 Read(21,*)
 Read(21,*)
 
 do while (eof .ne. -1)
+
 
   ! calc. root growth 
 	if (i .eq. 1) then
@@ -62,7 +66,9 @@ do while (eof .ne. -1)
   ft = 1.0 - exp(-kt*Lt)
 	
 	! calculates crop coefficient
-	kc = ft/ft_r
+	!kc = ft/ft_r
+	kc = kc_min + (kc_full - kc_min) * ft
+	
 	! Everton's thesis: has to vary albedo to work
 	!LAI = Lt *rho	
 	!kc = (1.0-av-(as-av)*exp(-kt*LAI))/(1.0-0.23)
@@ -77,12 +83,16 @@ do while (eof .ne. -1)
 
   ! calculates total, shoot and root biomass rates
   dB = biomass(radExt, ft, Rad, rho, bioloss_fac, Bant)
-	dBs = (1.0 + reduction_fac(Wi_ant_t, Wx_ant_t, beta) * root_frac / (1.0 - root_frac)) * (1.0 - root_frac) * dB
-	dBr = dB * root_frac
+	!dBs = (1.0 + reduction_fac(Wi_ant_t, Wx_ant_t, beta) * part_root / (1.0 - part_root)) * (1.0 - part_root) * dB
+	dBs = dB * part_shoot
+	dBr = dB * part_root
+	!dBr = dB - dBs
   ! calculates total, shoot and root biomass
   B = db + Bant
   Bshoot = Bshoot_ant + dBs
   Broot = Broot_ant + dBr
+
+	dbsum = dbsum + dB
 
 	write(2,201) Year, SQD, A, B, N, Broot, Bshoot, root_depth
   
@@ -106,10 +116,12 @@ subroutine readSoilData()
   Open(31,file='soil.in',status='old')
   !Open(31,file='soilPeter.in',status='old')
   read(31,*)
-  read(31,*) Or1, Os1, alpha1, n1, Ks1
-  read(31,*) Or2, Os2, alpha2, n2, Ks2
+  read(31,*) Or1, Os1
+  read(31,*) Or2, Os2
   read(31,*)
   read(31,*) z1, z2
+  read(31,*)
+  read(31,*) Wii
   close(31)
 end subroutine
 
@@ -222,17 +234,23 @@ end function
 
 real function biomass(radExt, ft, rad, rho, bioloss_fac, B)
   real, intent(in) :: radExt, ft, rad, rho, bioloss_fac, B
-	real::alpha,bb,gama
-	alpha = 0
+	real::bb
+	!alpha = 0
 	bb = 0.9
-	gama = 0.000046
+	!gama = 0.000046
   
-	if (B > (ft*radExt*reduction_fac(Wi_ant_t, Wx_ant_t, beta)*17.0/(bioloss_fac*rho))) then
-	  biomass = 0.0
-	else
-    biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho - (bioloss_fac * B)
+	! Approach of de Werf ?¿???????????????
+	!if (B > (ft*radExt*reduction_fac(Wi_ant_t, Wx_ant_t, beta)*17.0/(bioloss_fac*rho))) then
+	!  biomass = 0.0
+	!else
+  !  biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho - (bioloss_fac * B)
+	!endif
+
+  ! Approach of Peter
   !biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho * ( alpha+((2.0*bb)/(1.0+exp(gama*B))))
-	endif
+  
+	! our approach of bioloss
+	biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho * ( 1.0/(exp(gama*B)))
 
   return
 end function
@@ -250,12 +268,10 @@ subroutine initializeVariables()
 
   ! Variable initializationa
 	i						= 1
-  Wii       	= 0.0
 	Wi_ant_t		= wii
 	Wx_ant_t		= 0.00001
   Eta       	= 0.0
-  ET_ant    	= 5.65
-  beta 				= .8
+  ET_ant    	= 5.65			! from weather input file (1st line)
   eof       	= 0
   Dsum      	= 0
   rainsum   	= 0
@@ -263,37 +279,71 @@ subroutine initializeVariables()
   BLmax				= 0.0
   ETavg     	= 0
   ETaavg    	= 0
-  Am 					= 0.05
-  Aant 				= 0.0
   A 					= 0.0   !1/day
-  rho 				= 0.0156
-  tau 				= 10.0  ! day
-  Nant 				= 0.6
-  Nmax 				= 10000.0 
-  dBs 				= 0.0
-  Bant 				= 500.0
-  Bshoot 			= Bant*0.4
-	Broot				= Bant*0.6
+  dBs 				= 0.0				
+  Bshoot 			= Bant*part_shoot
+	Broot				= Bant*part_root
 	Bshoot_ant	= 200.0
 	Broot_ant		= 300.0
-  kt 					= 0.8
   radExt 			= 1.5
   bioloss_fac = 0.005
-	root_frac   = 0.6
+	!root_frac   = 0.6
 	root_max    = 800.0  ! mm
   Wz					= 0.0
-	rdg 				= 0.2		 ! mm/g
   inter				= 0.13
-	ft_r				= 0.846184277466571
-	av					= 0.13
-	as					= 0.25
+
+
+!  ! Soil
+!	Wii       	= 0.0				! input
+!	! red. function
+!  beta 				= .8				! input
+!	ft_r				= 0.846184277466571		! input (from Peter)
+!  ! plant
+!  Am 					= 0.05			! input
+!  Aant 				= 0.0				! input
+!  Nant 				= 0.6				! input
+!  Nmax 				= 10000.0 	! input
+!  Bant 				= 500.0			! input
+!  tau 				= 10.0  ! day (input)
+!	rdg 				= 0.2		 ! mm/g (input)
+!  rho 				= 0.0156		! input 
+!  ! radiation
+!	kt 					= 0.8				! input
+
+end subroutine
+
+subroutine readInputs()
+implicit none
+ open(7,file='params.in', status='old')
+ read(7,*)
+ read(7,*) beta, ft_r
+ read(7,*)
+ read(7,*)
+ read(7,*) kt
+ read(7,*)
+ read(7,*)
+ read(7,*) Am
+ read(7,*) Aant
+ read(7,*) Nant
+ read(7,*) Nmax
+ read(7,*) Bant
+ read(7,*) tau 
+ read(7,*) rdg 
+ read(7,*) rho 
+ read(7,*) part_root, part_shoot
+ read(7,*) gama
+ read(7,*)
+ read(7,*)
+ read(7,*) kc_min, kc_full
+ close(7)
+ !print*, beta, ft_r, kt, Am, Aant, Nant, Nmax, Bant, tau, rdg, rho
 end subroutine
 
 subroutine waterBalance()
 implicit none
 
 110 FORMAT (2I7,9(F8.2,2x)) 
-120 FORMAT (I7,2x,5(F8.2,2x)) 
+120 FORMAT (I7,2x,5(F8.2,2x), F6.2) 
 
   ! calculates soil water balance
   if (eof .ne. -1) then
@@ -303,21 +353,23 @@ implicit none
     ! show on screen at yearly timestep
     if (int(Year/4.0)*4 == Year) then
       if (SQD == 366) then
-        write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum
+        write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD
         Dsum      = 0
         rainsum   = 0
-        !BLsum     = 0
+        BLsum     = 0
         ETavg     = 0
         ETaavg    = 0
+				dbsum = 0.0
      endif
     else
       if (SQD == 365) then
-        write(*,120) Year,ETavg, ETaavg, Dsum, rainsum, BLsum
+        write(*,120) Year,ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD
         Dsum      = 0
         rainsum   = 0
-        !BLsum     = 0
+        BLsum     = 0
         ETavg     = 0
         ETaavg    = 0
+				dbsum = 0.0
       endif
     endif
     ! write in output file in daily timestep

@@ -1,9 +1,9 @@
 ! Soil hydraulic properties (Or, Os, a, n, Ks)
-0.00     0.20    6.85    1.21   2.223
-0.00     0.2    24.96   1.16   0.365
+0.00     0.2163   6.85    1.21   2.223
+0.00     0.1778   24.96   1.16   0.365
 ! Depths of each layer (layer1, layer2 [mm])
 400.0     400.0
-
+! Initial soil water storage [mm]
 0.0
 
 !Occ1 = 0.2163
