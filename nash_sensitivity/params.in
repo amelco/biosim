@@ -17,4 +17,4 @@
 0.00004				! bioloss shape factor, gamma [4.6E-5 around that]
 
 ! kc params: kc_min, kc_full
-      0.0000,      1.1514
+      0.0000       1.3680

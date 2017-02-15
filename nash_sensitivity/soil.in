@@ -4,7 +4,7 @@
 ! Depths of each layer (layer1, layer2 [mm])
 400.0     400.0
 ! Initial soil water storage [mm]
-    202.0000
+    240.0000
 
 !Occ1 = 0.2163
 !Occ2 = 0.1778

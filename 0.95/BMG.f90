@@ -30,8 +30,8 @@ write(2,200) "Year", "SQD", "A", "B", "N", "Broot", "Bshoot", "rd"
 
 ! Calculates maximum soil-water storage for each depth
 
-Open(21,file='data.prn',status='old')
-!Open(21,file='data2.prn',status='old')
+!Open(21,file='data.prn',status='old')
+Open(21,file='data2.prn',status='old')
 !Open(21,file='Peter2.prn',status='old')
 Read(21,*)
 Read(21,*)
