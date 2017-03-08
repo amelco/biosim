@@ -15,9 +15,14 @@ plot f1 u :8 w boxes, '' u :10 w boxes axes x1y2
 
 set out 'biomass.pdf'
 set title 'Biomass (g)'
-plot f2 u :4 w l
+plot f2 u :4 w l, '' u :9 w l
+set title 'dB/dt'
+plot 'tmp.txt' u :7 w l
+set title 'Anual Biomass (g)'
 set title 'N (-)'
 plot f2 u :5 w l
+set title 'Anual Biomass (g)'
+plot 'tmp.txt' u :8 w l, '' u :9 w l
 
 
 set title 'A (m2)'

@@ -1,0 +1,16 @@
+set terminal pdfcairo enhanced dashed
+
+
+set out 'all.pdf'
+
+set xlabel "time (year)"
+set ylabel "biomass (kg)"
+set xtics nomirror
+set ytics nomirror
+set xrange [:100]
+
+plot 'bio.out' u (column(0)/365):($4/1000) w l t ''
+set ylabel "average biomass growth rate (g day^{-1})"
+plot 'tmp.txt' u (column(0)):($7) w l t ''
+set ylabel "leaf area index (m^{2})"
+plot 'bio.out' u (column(0)/365):($3*$5) w l t ''

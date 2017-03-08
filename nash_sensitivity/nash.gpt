@@ -1,0 +1,7 @@
+set terminal pdfcairo enhanced dashed
+f1='results/biomass_nash.sns'
+
+set out 'nash.pdf'
+
+set yrange [0.7:1.1]
+plot for [i=1:23] f1 u 1:i w l t ''

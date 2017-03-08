@@ -6,10 +6,16 @@ implicit none
 100 FORMAT (2A7,11(A8,2x)) 
 101 FORMAT (A5,10(A8,2x)) 
 102 FORMAT (A7,2x,5(A8,2x)) 
-200 FORMAT (2A5,A8,  2x,A12,  2x,A6,  2x,2A12,  2x,A8)
-201 FORMAT (2I5,F8.5,2x,F12.1,2x,F6.1,2x,2F12.1,2x,F8.2)
+200 FORMAT (2A5,A8,  2x,A12,  2x,A6,  2x,2A12,  2x,A8,  2x,A20)
+201 FORMAT (2I5,F8.5,2x,F12.1,2x,F6.1,2x,2F12.1,2x,F8.2,2x,F20.4)
 
 real :: dbsum
+real :: Bx, Bxsum
+real, dimension(6) :: B_last  ! stores the last 6 years of acumulated biomass
+real :: avg										! average biomass growth rate from the last 5 years
+logical :: rate_0							! flag to represent zero growth rate. True when avg < 500 g
+
+rate_0 = .false.
 
 ! read soil parameters data from input file
 call readInputs()
@@ -18,6 +24,8 @@ call readSoilData()
 call initializeVariables()
 
 dbsum = 0.0
+Bx = 0.0
+Bxsum = 0.0
 
 ! opens the output file
 Open(1,file='swb.out', status='replace')
@@ -25,7 +33,7 @@ Open(1,file='swb.out', status='replace')
 write(*,102) "Year", "ET", "ETa", "Drainage", "Rain", "WB"
 write(1,101) "Year", "SQD", "ET", "ETa", "Tr", "Wi", "Wx", "D", "Rain", "BL", "omega"
 Open(2,file='bio.out', status='replace')
-write(2,200) "Year", "SQD", "A", "B", "N", "Broot", "Bshoot", "rd"
+write(2,200) "Year", "SQD", "A", "B", "N", "Broot", "Bshoot", "rd", "Bx"
 
 
 ! Calculates maximum soil-water storage for each depth
@@ -91,10 +99,20 @@ do while (eof .ne. -1)
   B = db + Bant
   Bshoot = Bshoot_ant + dBs
   Broot = Broot_ant + dBr
+	! store total biomass in array with the last 5 yearly values of biomass value
+	if (SQD == 365) then
+	  avg = storeBiomass(B)
+		if (avg < 500.0 .and. i > 365*5) then   ! i equals cumulative days. It must be superior to 5 years
+		  rate_0 = .true.
+		endif
+  endif
 
 	dbsum = dbsum + dB
 
-	write(2,201) Year, SQD, A, B, N, Broot, Bshoot, root_depth
+	Bx = (log((reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho ) + 6.9) / gama
+	Bxsum = Bxsum + Bx
+
+	write(2,201) Year, SQD, A, B, N, Broot, Bshoot, root_depth, Bx
   
   Aant = A
   Bant = B
@@ -109,6 +127,28 @@ print*, "Maximum water balance error: ", BLmax
 print*
 
 contains
+
+real function storeBiomass(BioSum)
+implicit none
+real, intent(in) :: BioSum
+real, dimension(SIZE(B_last)-1) :: diff
+integer :: i
+
+  i = 1
+  do while (i < SIZE(B_last))
+	  B_last(i) = B_last(i+1)
+	  i = i+1
+	enddo
+	B_last(SIZE(B_last)) = BioSum
+
+  i = 1
+	do while (i <= SIZE(diff))
+	  diff(i) = B_last(i+1) - B_last(i)
+		i = i+1
+	enddo
+  storeBiomass = SUM(diff)/SIZE(diff)
+	return 
+end function
 
 ! read soil parameters data from input file
 subroutine readSoilData()
@@ -235,23 +275,17 @@ end function
 real function biomass(radExt, ft, rad, rho, bioloss_fac, B)
   real, intent(in) :: radExt, ft, rad, rho, bioloss_fac, B
 	real::bb
-	!alpha = 0
 	bb = 0.9
-	!gama = 0.000046
-  
-	! Approach of de Werf ?¿???????????????
-	!if (B > (ft*radExt*reduction_fac(Wi_ant_t, Wx_ant_t, beta)*17.0/(bioloss_fac*rho))) then
-	!  biomass = 0.0
-	!else
-  !  biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho - (bioloss_fac * B)
-	!endif
-
-  ! Approach of Peter
-  !biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho * ( alpha+((2.0*bb)/(1.0+exp(gama*B))))
   
 	! our approach of bioloss
-	biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho * ( 1.0/(exp(gama*B)))
-
+	if (rate_0 .eqv. .false.) then
+	  biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho * ( 1.0/(exp(gama*B)))
+	else
+	  biomass = 0
+	endif
+	! Klaas
+	!biomass = (reduction_fac(Wi_ant_t, Wx_ant_t, beta) * radExt*ft*rad ) / rho *  (1.0 - B/100000.0)**2
+	
   return
 end function
 
@@ -343,7 +377,7 @@ subroutine waterBalance()
 implicit none
 
 110 FORMAT (2I7,9(F8.2,2x)) 
-120 FORMAT (I7,2x,5(F8.2,2x), F6.2) 
+120 FORMAT (I7,2x,5(F8.2,2x), F6.2, 2(2x,F12.2)) 
 
   ! calculates soil water balance
   if (eof .ne. -1) then
@@ -353,23 +387,27 @@ implicit none
     ! show on screen at yearly timestep
     if (int(Year/4.0)*4 == Year) then
       if (SQD == 366) then
-        write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD
+        !write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD, B, Bxsum/SQD
+        write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD, B, avg
         Dsum      = 0
         rainsum   = 0
         BLsum     = 0
         ETavg     = 0
         ETaavg    = 0
 				dbsum = 0.0
+				Bxsum = 0.0
      endif
     else
       if (SQD == 365) then
-        write(*,120) Year,ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD
+        !write(*,120) Year,ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD, B, Bxsum/SQD
+        write(*,120) Year, ETavg, ETaavg, Dsum, rainsum, BLsum, dbsum/SQD, B, avg
         Dsum      = 0
         rainsum   = 0
         BLsum     = 0
         ETavg     = 0
         ETaavg    = 0
 				dbsum = 0.0
+				Bxsum = 0.0
       endif
     endif
     ! write in output file in daily timestep

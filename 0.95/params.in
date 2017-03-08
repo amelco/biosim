@@ -7,7 +7,7 @@
 ! plant parameters
 0.05					! Am   [m2] 
 0.0						! Aant [m2]
-0.6						! Nant [-]
+1.0						! Nant [-]
 10000.0 			! Nmax [-]
 1000.0				! Bant [g]
 10.0    			! tau  [day]

@@ -85,8 +85,6 @@ for (( c=0; c<${#delta[@]}; c++)); do
   
   	# copying results and renaming according to the variable number
   	echo "${i} bio_${var}-p${delta[$j]}.out"
-  	filebio=`echo ""`
-  	fileswb=`echo ""`
   	cp bio.out "results/bio_${var}-p${delta[$j]}.out"
   	cp swb.out "results/swb_${var}-p${delta[$j]}.out"
   #	cd results
@@ -110,6 +108,14 @@ else
 	echo -n "Type all percentual changes: "
 	read -a p
 	cd results
+
+  # preparing nash output file
+	echo -e "param" > biomass_nash.sns
+	for ((g=0; g<${#p[@]}; g++)); do
+	  echo -e "${p[$g]}" >> biomass_nash.sns
+	done
+	cp biomass_nash.sns n.tmp
+
   echo "Creating sns files..."
 	for f in bio_*-p${p[1]}.out; do
 	  # getting name of parameters
@@ -121,7 +127,7 @@ else
 	  # creating tmp file that stores acumulated columns
 	  awk 'BEGIN{print "ano","SQD","B_def"} NR>1{print $1, $2, $4}' bio_default.out > tmp
 
-		echo "  Processing parameter ${par_name}..."
+		echo -e -n "\n  Processing parameter ${par_name}..."
 
 		# loop through all variations
 		for ((g=0; g<${#p[@]}; g++)); do
@@ -130,12 +136,21 @@ else
 			paste -d' ' tmp 1.tmp > biomass_${par_name}.sns
 			cp biomass_${par_name}.sns tmp
 		done
-		
 		# removing tmp file
 		rm tmp
+	  rm 1.tmp
+
+		echo -e -n " \t\tCalculating efficiency..."
+
+	  # Calculating Nash model efficiency e
+		echo -e "${par_name}" > 2.tmp
+		for ((g=0; g<${#p[@]}; g++)); do
+		  avg=`awk 'BEGIN{sum=0;i=0}NR>1{sum=sum+$3;i++}END{printf "%8.2f", sum/i}' biomass_${par_name}.sns`
+	    e=`awk -v avg=$avg -v j=$g 'BEGIN{num=0;den=0}{num=num+($(j+3)-$3)**2;den=den+($3-avg)**2}END{print 1-num/den}' biomass_${par_name}.sns`
+		  echo -e "$e" >> 2.tmp
+		done
+		paste -d'\t' n.tmp 2.tmp > biomass_nash.sns
+		cp biomass_nash.sns n.tmp
 	done
-	rm 1.tmp
-
-  # Execute gnuplot script for nash and plotting
-
+	rm *.tmp
 fi
