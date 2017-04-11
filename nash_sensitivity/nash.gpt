@@ -1,7 +1,35 @@
 set terminal pdfcairo enhanced dashed
 f1='results/biomass_nash.sns'
 
-set out 'nash.pdf'
+set out 'curves.pdf'
 
-set yrange [0.7:1.1]
-plot for [i=1:23] f1 u 1:i w l t ''
+set ylabel "biomass (g)"
+set xlabel "time (d)"
+
+set title 'N_{max}'
+
+plot 'results/biomass_Nmax.sns' \
+     u (column(0)):3 w l t 'default',\
+  '' u (column(0)):4 w l t '5%',\
+  '' u (column(0)):5 w l t '10%'
+
+#set out 'nash.pdf'
+unset title
+set xlabel 'variation (%)'
+set ylabel 'e'
+set key top right outside
+set xtics nomirror
+set ytics nomirror
+set border 1
+set arrow from 0,0.88 to 0,1 nohead
+set grid
+
+plot 'results/biomass_nash.sns' u 1:3 w lp t 'A_{max}',\
+     '' u 1:4  w lp t '{/Symbol g}',\
+     '' u 1:5  w lp t 'B_{ini}',\
+     '' u 1:7  w lp t 'N_{ini}',\
+     '' u 1:9  w lp t '%_{root}',\
+     '' u 1:10 w lp t 'rad_{ext}',\
+     '' u 1:11 w lp t 'rdg',\
+     '' u 1:12 w lp t '{/Symbol r}',\
+     '' u 1:13 w lp t '{/Symbol t}',\

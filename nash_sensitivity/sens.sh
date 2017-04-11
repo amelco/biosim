@@ -4,9 +4,25 @@
 ##
 ## Sensitivity analysis
 ##
-## 1. Change of all input parameters at a given percentage 
+## 1. Change of the following input parameters at a given percentage:
+##   * Beta => reduction function exponent
+##   * Am
+##   * Nini
+##   * Bini
+##   * tau
+##   * rdg
+##   * rho
+##   * bioloss (gamma)
+##   * kc_min
+##   * kc_full
+##   * Initial soil water storage (Wx_ini) => soil input file
+##   * thetas
 ## 2. Compare to biomass output (the whole period) by Nash and Sutcliff model eficiency 
 ## assuming the results from the default parameter set as "measured data"
+##
+## Variables description:
+## * delta[] => array with all the percentual variations
+## * np => number of parameters to change
 
 ## Begin of script
 
@@ -27,14 +43,14 @@ fi
 #pdelta=$(echo "$delta/100" | bc -l)
 # number of parameters to be changed
 np=23
+# Am, Nini, Bini, tau, rdg, rho, gamma, kc_min, kc_full, Wx_ini, Os and Or
 
 #if [ $delta -ne 0 ]; then
 if [ ${delta[0]} -ne 0 ]; then
-  
-  ## storing the default result ##
+  ## storing the default result (with no variation)##
   cp params.in.default params.in
   cp soil.in.default soil.in
- 	./bmg &> /dev/null
+ 	./bmg2 &> /dev/null
   #./bmg
   cp bio.out results/bio_default.out
   cp swb.out results/swb_default.out
@@ -81,7 +97,7 @@ for (( c=0; c<${#delta[@]}; c++)); do
     esac
   
   	# running the model
-  	./bmg &> /dev/null
+  	./bmg2 &> /dev/null
   
   	# copying results and renaming according to the variable number
   	echo "${i} bio_${var}-p${delta[$j]}.out"
@@ -144,7 +160,7 @@ else
 
 	  # Calculating Nash model efficiency e
 		echo -e "${par_name}" > 2.tmp
-		for ((g=0; g<${#p[@]}; g++)); do
+		for ((g=1; g<=${#p[@]}; g++)); do
 		  avg=`awk 'BEGIN{sum=0;i=0}NR>1{sum=sum+$3;i++}END{printf "%8.2f", sum/i}' biomass_${par_name}.sns`
 	    e=`awk -v avg=$avg -v j=$g 'BEGIN{num=0;den=0}{num=num+($(j+3)-$3)**2;den=den+($3-avg)**2}END{print 1-num/den}' biomass_${par_name}.sns`
 		  echo -e "$e" >> 2.tmp
