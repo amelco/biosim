@@ -13,8 +13,8 @@
 15.0    			  ! tau  [day]
 0.10		  			! rdg  [g/mm]
 0.01	  			! rho  [trees/m2]
-      0.6000       0.6000
+0.4 0.6       ! biomass partitioning: root, shoot
 0.000035				! bioloss shape factor, gamma [4.6E-5 around that]
 
 ! kc params: kc_min, kc_full
-0.0  1.14
+      0.0000       1.7100

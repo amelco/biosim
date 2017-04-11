@@ -24,12 +24,19 @@ set border 1
 set arrow from 0,0.88 to 0,1 nohead
 set grid
 
-plot 'results/biomass_nash.sns' u 1:3 w lp t 'A_{max}',\
-     '' u 1:4  w lp t '{/Symbol g}',\
-     '' u 1:5  w lp t 'B_{ini}',\
-     '' u 1:7  w lp t 'N_{ini}',\
-     '' u 1:9  w lp t '%_{root}',\
-     '' u 1:10 w lp t 'rad_{ext}',\
-     '' u 1:11 w lp t 'rdg',\
-     '' u 1:12 w lp t '{/Symbol r}',\
-     '' u 1:13 w lp t '{/Symbol t}',\
+plot 'results/biomass_nash.sns'\
+         u 1:3  w lp t 'A_{max}',\
+     '' u 1:10 w lp t 'Nini ',\
+     '' u 1:5  w lp t 'Bini ',\
+     '' u 1:21 w lp t 'tau  ',\
+     '' u 1:19 w lp t 'rdg  ',\
+     '' u 1:20 w lp t 'rho  ',\
+#     '' u 1:6  w lp t 'gamma'
+plot 'results/biomass_nash.sns'\
+        u 1:9  w lp t 'kc_m ',\
+     '' u 1:8  w lp t 'kcf',\
+     '' u 1:22 w lp t 'Wx_i ',\
+     '' u 1:12 w lp t 'or1  ',\
+     '' u 1:13 w lp t 'or2  ',\
+     '' u 1:14 w lp t 'os1  ',\
+     '' u 1:15 w lp t 'os2  '
